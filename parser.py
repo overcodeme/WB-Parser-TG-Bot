@@ -14,14 +14,13 @@ def parse_wildberries(url):
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get(url)
-    time.sleep(5)
+    time.sleep(3)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
 
     products = soup.find_all('div', class_='product-snippet')
     result = []
 
-    # Ограничение количества товаров до 10
-    for product in products[:10]:  # Берем только первые 10 товаров
+    for product in products:
         product_title = product.find('span', class_='product-card__name').text.strip()
         product_link = product.find('a', class_='product-card__link').get('href')
         old_price = product.find('span', class_='price__old').text.strip()
