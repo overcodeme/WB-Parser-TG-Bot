@@ -5,36 +5,35 @@ from bs4 import BeautifulSoup
 import time
 
 
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+def parse_wildberries(url):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_driver_path = 'A:/chromedriver/chromedriver.exe'
 
-chrome_driver_path = 'A:/chromedriver/chromedriver.exe'
+    service = Service(executable_path=chrome_driver_path)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
-service = Service(executable_path=chrome_driver_path)
-driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver.get(url)
+    time.sleep(5)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-url = 'https://www.wildberries.by/catalog/zhenshchinam/odezhda/bluzki-i-rubashki'
-driver.get(url)
+    products = soup.find_all('div', class_='product-snippet')
+    result = []
 
-time.sleep(5)
-soup = BeautifulSoup(driver.page_source, 'html.parser')
+    # Ограничение количества товаров до 10
+    for product in products[:10]:  # Берем только первые 10 товаров
+        product_title = product.find('span', class_='product-card__name').text.strip()
+        product_link = product.find('a', class_='product-card__link').get('href')
+        old_price = product.find('span', class_='price__old').text.strip()
+        current_price = product.find('span', class_='price__lower').text.strip()
 
-products = soup.find_all('div', class_='product-snippet')
+        result.append({
+            'title': product_title,
+            'link': f'https://www.wildberries.by{product_link}',
+            'old_price': old_price,
+            'current_price': current_price
+        })
 
-for product in products:
-    product_title = product.find('span', class_='product-card__name').text.strip()
-    product_link = product.find('a', class_='product-card__link').get('href')
-    old_price = product.find('span', class_='price__old').text.strip()
-    current_price = product.find('span', class_='price__lower').text.strip()
-
-    print(f'Название товара: {product_title}')
-    print(f'Ссылка на товар: https://www.wildberries.by{product_link}')
-    print(f'Цена без скидки: {old_price}')
-    print(f'Текущая цена: {current_price}')
-
-
-
-
+    driver.quit()
+    return result
 
