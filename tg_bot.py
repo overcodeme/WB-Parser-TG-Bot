@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram import Router
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 from parser import parse_wildberries
 
 TOKEN = '7389797526:AAFcwtuqshsfFs-ilgkfrqV1y-9xJGFwBCc'
@@ -13,6 +13,13 @@ dp = Dispatcher()
 # Создаем роутер для обработки команд
 router = Router()
 dp.include_router(router)
+
+# Создание минимального интерфейса
+def get_main_menu():
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton(text="Начать парсинг", callback_data="start_parsing"))
+    keyboard.add(InlineKeyboardButton(text="Оплата", callback_data="payment"))
+    return keyboard
 
 # Функция для установки командных подсказок
 async def set_bot_commands(my_bot: Bot):
