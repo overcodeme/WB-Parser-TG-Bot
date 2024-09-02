@@ -60,7 +60,7 @@ def create_categories_inline_menu():
     ]
 
     # Создаем InlineKeyboardMarkup с пустым списком строк
-    inline_kb = InlineKeyboardMarkup(inline_keyboard=[])
+    category_keyboard = InlineKeyboardMarkup(inline_keyboard=[])
 
     # Добавляем кнопки в инлайн-клавиатуру по 4 в строке
     row = []
@@ -68,19 +68,19 @@ def create_categories_inline_menu():
         button = InlineKeyboardButton(text=name, callback_data=callback_data)
         row.append(button)
         if len(row) == 4:
-            inline_kb.inline_keyboard.append(row)
+            category_keyboard.inline_keyboard.append(row)
             row = []
 
     # Добавляем оставшиеся кнопки, если их меньше 4
     if row:
-        inline_kb.inline_keyboard.append(row)
+        category_keyboard.inline_keyboard.append(row)
 
-    return inline_kb
+    return category_keyboard
 
 
 # Обработчик команды /start
 @router.message(Command("start"))
-async def start_command(message: types.Message):
+async def start_command(message):
     await message.answer(
         'Добро пожаловать! Нажмите кнопку "Start", чтобы продолжить.',
         reply_markup=start_button_keyboard  # Отображаем клавиатуру с кнопкой "Start"
@@ -89,7 +89,7 @@ async def start_command(message: types.Message):
 
 # Обработчик кнопки "Start" в клавиатуре
 @router.message(lambda message: message.text == "Start")
-async def show_main_menu(message: types.Message):
+async def show_main_menu(message):
     await message.answer(
         'Выберите команду:',
         reply_markup=main_inline_menu  # Показываем главное меню
