@@ -1,6 +1,5 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram import Router
-from aiogram.filters import Command  # Импортируем Command для фильтрации по команде
+from aiogram import Bot, Dispatcher, Router, types
+from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 
@@ -9,8 +8,6 @@ TOKEN = '7389797526:AAFcwtuqshsfFs-ilgkfrqV1y-9xJGFwBCc'
 # Создаем экземпляры бота и диспетчера
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-
-# Создаем роутер для обработки команд
 router = Router()
 dp.include_router(router)
 
@@ -22,65 +19,88 @@ start_button_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True  # Автоматическая подгонка размера кнопок
 )
 
-# Создаем инлайн-клавиатуру с кнопками для главного меню
-main_inline_menu = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text="Parse", callback_data="parse_callback")],
-        [InlineKeyboardButton(text="Команда 1", callback_data="cmd1")],
-        [InlineKeyboardButton(text="Команда 2", callback_data="cmd2")],
-        [InlineKeyboardButton(text="Команда 3", callback_data="cmd3")],
-    ]
-)
 
-# Функция для создания инлайн-клавиатуры с категориями по 4 кнопки в строке
+# Основные категории
 def create_categories_inline_menu():
-    categories = [
-        ("Женщинам", "category_women"),
-        ("Обувь", "category_shoes"),
-        ("Детям", "category_kids"),
-        ("Мужчинам", "category_men"),
-        ("Дом", "category_home"),
-        ("Красота", "category_beauty"),
-        ("Аксессуары", "category_accessories"),
-        ("Электроника", "category_electronics"),
-        ("Игрушки", "category_toys"),
-        ("Мебель", "category_furniture"),
-        ("Товары для взрослых", "category_adults"),
-        ("Продукты", "category_food"),
-        ("Бытовая техника", "category_appliances"),
-        ("Зоотовары", "category_pets"),
-        ("Спорт", "category_sports"),
-        ("Автотовары", "category_auto"),
-        ("Школа", "category_school"),
-        ("Книги", "category_books"),
-        ("Для ремонта", "category_repair"),
-        ("Сад и дача", "category_garden"),
-        ("Здоровье", "category_health"),
-        ("Канцтовары", "category_stationery"),
-    ]
+    return {
+        'Футболки': {
+            'Мужские': {
+                'callback_data': 'category_tshirts_men',
+                'url': 'https://wildberries.ru/catalog/muzhchiny/odezhda/futbolki'
+            },
+            'Женские': {
+                'callback_data': 'category_tshirts_women',
+                'url': 'https://wildberries.ru/catalog/zhenshchiny/odezhda/futbolki'
+            }
+        },
+        'Лонгсливы': {
+            'Мужские': {
+                'callback_data': 'category_longsleeves_men',
+                'url': 'https://wildberries.ru/catalog/muzhchiny/odezhda/longslivy'
+            },
+            'Женские': {
+                'callback_data': 'category_longsleeves_women',
+                'url': 'https://wildberries.ru/catalog/zhenshchiny/odezhda/longslivy'
+            }
+        },
+        'Кроссовки': {
+            'Мужские': {
+                'callback_data': 'category_sneakers_men',
+                'url': 'https://wildberries.ru/catalog/muzhchiny/obuv/krossovki'
+            },
+            'Женские': {
+                'callback_data': 'category_sneakers_women',
+                'url': 'https://wildberries.ru/catalog/zhenshchiny/obuv/krossovki'
+            }
+        },
+        'Носки': {
+            'Мужские': {
+                'callback_data': 'category_socks_men',
+                'url': 'https://wildberries.ru/catalog/muzhchiny/aksessuary/noski'
+            },
+            'Женские': {
+                'callback_data': 'category_socks_women',
+                'url': 'https://wildberries.ru/catalog/zhenshchiny/aksessuary/noski'
+            }
+        }
+    }
 
-    # Создаем InlineKeyboardMarkup с пустым списком строк
-    category_keyboard = InlineKeyboardMarkup(inline_keyboard=[])
 
-    # Добавляем кнопки в инлайн-клавиатуру по 4 в строке
-    row = []
-    for name, callback_data in categories:
-        button = InlineKeyboardButton(text=name, callback_data=callback_data)
-        row.append(button)
-        if len(row) == 4:
-            category_keyboard.inline_keyboard.append(row)
-            row = []
+def generate_inline_keyboard(categories):
+    """Функция для создания инлайн-клавиатуры для текущего уровня категорий."""
+    inline_kb = InlineKeyboardMarkup(row_width=2)  # Ряд из двух кнопок по умолчанию
 
-    # Добавляем оставшиеся кнопки, если их меньше 4
-    if row:
-        category_keyboard.inline_keyboard.append(row)
+    for category_name, subcategory_info in categories.items():
+        button = InlineKeyboardButton(
+            text=category_name,
+            callback_data=subcategory_info['callback_data']
+        )
+        inline_kb.add(button)
 
-    return category_keyboard
+    return inline_kb
+
+
+def generate_subcategories_keyboard(subcategories):
+    """Функция для создания инлайн-клавиатуры для подкатегорий."""
+    inline_kb = InlineKeyboardMarkup(row_width=2)  # Ряд из двух кнопок по умолчанию
+
+    for subcategory_name, subcategory_info in subcategories.items():
+        button = InlineKeyboardButton(
+            text=subcategory_name,
+            url=subcategory_info['url']
+        )
+        inline_kb.add(button)
+
+    return inline_kb
+
+
+# Основные категории
+categories = create_categories_inline_menu()
 
 
 # Обработчик команды /start
 @router.message(Command("start"))
-async def start_command(message):
+async def start_command(message: types.Message):
     await message.answer(
         'Добро пожаловать! Нажмите кнопку "Start", чтобы продолжить.',
         reply_markup=start_button_keyboard  # Отображаем клавиатуру с кнопкой "Start"
@@ -89,24 +109,30 @@ async def start_command(message):
 
 # Обработчик кнопки "Start" в клавиатуре
 @router.message(lambda message: message.text == "Start")
-async def show_main_menu(message):
-    await message.answer(
-        'Выберите команду:',
-        reply_markup=main_inline_menu  # Показываем главное меню
-    )
+async def show_main_menu(message: types.Message):
+    main_menu = generate_inline_keyboard(categories)
+    await message.answer("Выберите категорию:", reply_markup=main_menu)
 
 
 # Обработчик нажатий на инлайн-кнопки
 @router.callback_query()
 async def process_callback(callback_query: types.CallbackQuery):
-    if callback_query.data == "parse_callback":
-        # Показываем меню с категориями
-        categories_inline_menu = create_categories_inline_menu()  # Создаем клавиатуру при каждом запросе
-        await callback_query.message.answer("Выберите категорию:", reply_markup=categories_inline_menu)
-    elif callback_query.data.startswith("category_"):
-        # Обработка выбранной категории
-        category = callback_query.data.split("_")[1]
-        await callback_query.message.answer(f"Вы выбрали категорию: {category}")
+    category_key = callback_query.data
+
+    # Ищем категорию по ключу
+    selected_category = next(
+        (info for name, info in categories.items() if info['callback_data'] == category_key),
+        None
+    )
+
+    if selected_category:
+        subcategories_menu = generate_subcategories_keyboard({
+            name: {'url': info['url']}
+            for name, info in selected_category.items() if 'url' in info
+        })
+        await callback_query.message.edit_text("Выберите подкатегорию:", reply_markup=subcategories_menu)
+    else:
+        await callback_query.message.answer("Неправильный выбор.")
 
 
 # Очистка списка команд
@@ -119,6 +145,3 @@ async def run_bot():
     await clear_bot_commands(bot)  # Очистка команд
     await dp.start_polling(bot, skip_updates=True)
 
-
-if __name__ == "__main__":
-    asyncio.run(run_bot())
